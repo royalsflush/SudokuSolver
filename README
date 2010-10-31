@@ -1,0 +1,12 @@
+Sudoku solver, using Knuth's X algorithm for the Exact Cover problem (using DLX)
+
+What's been done:
+1. Implement a sparse matrix using linked lists (2D lists)
+	//Seems ok, but I only tested it twice (look the main file) =P
+
+Next steps:
+2. Implement the DLX functions
+3. Test remove and insertion of lines and columns
+4. Code the exact cover backtracking (using the lowest possible branching factor)
+5. Test it with the wikipedia example
+6. Apply it to sudoku (with wikipedia's 4 restrictions)
