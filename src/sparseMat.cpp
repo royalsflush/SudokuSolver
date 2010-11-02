@@ -10,14 +10,14 @@
 
 //Element functions
 
-Elem::Elem(int x, int y)
+Elem::Elem(int di, int dj)
 {
-	this->posX = x;
-	this->posY = y;
+	this->i = di;
+	this->j = dj;
 	this->value = 1;
 
-	for (int i=0; i<4; i++)
-		neigh[i] = NULL; 
+	for (int it=0; it<4; it++)
+		neigh[it] = NULL; 
 }
 
 //List functions
@@ -40,40 +40,40 @@ SparseMatrix::SparseMatrix(int maxTI, int maxTJ)
 	for (int i=0; i<this->maxJ; i++)
 		currCols[i]=true;
 
-	this->lines = new List[maxTI];
-	this->currLines = new bool[maxTJ];
+	this->rows = new List[maxTI];
+	this->currRows = new bool[maxTJ];
 	this->maxI = this->currI = maxTI;
 
 	for (int i=0; i<this->maxI; i++)
-		currLines[i]=true;
+		currRows[i]=true;
 }
 
-void SparseMatrix::insertInPos(int x, int y)
+void SparseMatrix::insertInPos(int di, int dj)
 {
-	Elem* it = lines[x].first;
-	Elem* nElem = new Elem(x,y);	
+	Elem* it = rows[di].first;
+	Elem* nElem = new Elem(di,dj);	
 
 	#ifdef _DBG
-		printf("Inserting element into position %d, %d\n", x, y);
+		printf("Inserting element into position: %d, %d\n", di, dj);
 	#endif
 
 	if (!it) {
-		lines[x].first = nElem;
-		lines[x].last = nElem;
+		rows[di].first = nElem;
+		rows[di].last = nElem;
 		nElem->right = nElem;
 		nElem->left = nElem;
 	}
 	else {
-		while (it->posY < y && it!=lines[x].last) 
+		while (it->j < dj && it!=rows[di].last) 
 			it=it->right;
 		
-		if (it==lines[x].last && it->posY < y) {
-			nElem->right = lines[x].first;
-			nElem->left = lines[x].last;
-			lines[x].first->left = nElem;
-			lines[x].last->right = nElem;
+		if (it==rows[di].last && it->j < dj) {
+			nElem->right = rows[di].first;
+			nElem->left = rows[di].last;
+			rows[di].first->left = nElem;
+			rows[di].last->right = nElem;
 
-			lines[x].last = nElem;
+			rows[di].last = nElem;
 		}
 		else {
 			Elem* prev = it->left;
@@ -82,32 +82,32 @@ void SparseMatrix::insertInPos(int x, int y)
 			it->left = nElem;
 			prev->right = nElem;
 
-			if (it==lines[x].first) lines[x].first=nElem;
+			if (it==rows[di].first) rows[di].first=nElem;
 		}
 	}
 
-	this->lines[x].tam++;
+	this->rows[di].tam++;
 	
 	//Inserting into columns
-	it = columns[y].first;
+	it = columns[dj].first;
 
 	if (!it) {
-		columns[y].first = nElem;
-		columns[y].last = nElem;
+		columns[dj].first = nElem;
+		columns[dj].last = nElem;
 		nElem->up = nElem;
 		nElem->down = nElem;
 	}
 	else {
-		while (it->posX < x && it!=columns[y].last) 
+		while (it->i < di && it!=columns[dj].last) 
 			it=it->down;
 		
-		if (it==columns[y].last && it->posX < x) {
-			nElem->down = columns[y].first;
-			nElem->up = columns[y].last;
-			columns[y].first->up = nElem;
-			columns[y].last->down = nElem;
+		if (it==columns[dj].last && it->i < di) {
+			nElem->down = columns[dj].first;
+			nElem->up = columns[dj].last;
+			columns[dj].first->up = nElem;
+			columns[dj].last->down = nElem;
 
-			columns[y].last = nElem;
+			columns[dj].last = nElem;
 		}
 		else {
 			Elem* prev = it->up;
@@ -116,29 +116,36 @@ void SparseMatrix::insertInPos(int x, int y)
 			it->up = nElem;
 			prev->down = nElem;
 
-			if (it==columns[y].first) columns[y].first=nElem;
+			if (it==columns[dj].first) columns[dj].first=nElem;
 		}
 	}
 
-	this->columns[y].tam++;
+	this->columns[dj].tam++;
 }
+
+
 
 void SparseMatrix::print(bool byCols)
 {
 	Elem* it = NULL;
-	int lastY;
 
 	if (byCols) {
-		for (int j=0; j<this->currJ; j++) {
+		for (int j=0; j<this->maxJ; j++) {
+			if (!this->currCols[j]) 
+				continue;
+			
 			it=this->columns[j].first;
 
-			for (int i=0; i<this->currI; i++) {
+			for (int i=0; i<this->maxI; i++) {
+				if (!this->currRows[i])
+					continue;				
+
 				if (!it) { 
 					printf("0 "); 
 					continue; 
 				}
 				
-				if (i != it->posX) printf("0 ");
+				if (i != it->i) printf("0 ");
 				else {
 					printf("%d ", it->value);
 					it=it->down;
@@ -151,16 +158,22 @@ void SparseMatrix::print(bool byCols)
 		return;
 	}
 
-	for (int i=0; i<this->currI; i++) {
-		it=this->lines[i].first;
+	for (int i=0; i<this->maxI; i++) {
+		if (!this->currRows[i]) 
+			continue;
 
-		for (int j=0; j<this->currJ; j++) {
+		it=this->rows[i].first;
+
+		for (int j=0; j<this->maxJ; j++) {
+			if (!this->currCols[j])
+				continue;				
+			
 			if (!it) { 
 				printf("0 "); 
 				continue; 
 			}
 
-			if (j != it->posY) printf("0 ");
+			if (j != it->j) printf("0 ");
 			else {
 				printf("%d ", it->value);
 				it=it->right;
@@ -169,4 +182,188 @@ void SparseMatrix::print(bool byCols)
 
 		printf("\n");
 	}
+}
+
+void SparseMatrix::printAsList(bool byCols)
+{
+	Elem* it = NULL;
+
+	if (byCols) {
+		for (int j=0; j<this->maxJ; j++) {
+			if (!this->currCols[j]) continue;
+
+			printf("Column %d (size: %d): ", j, this->columns[j].tam);
+			
+			it = this->columns[j].first;			
+			if (!it) { 
+				printf("\n"); 
+				continue;
+			}
+
+			do {
+				printf("%d ", it->i);
+				it = it->down;
+			} while (it!= this->columns[j].first);
+			
+			printf(": first is %d, last is %d\n", this->columns[j].first->i, 
+				this->columns[j].last->i);
+			
+			printf("\n");
+		}
+		return;
+	}
+
+	for (int i=0; i<this->maxI; i++) {
+		if (!this->currRows[i]) continue;
+
+		printf("Row %d (size: %d): ", i, this->rows[i].tam);
+		
+		it = this->rows[i].first;			
+		if (!it) {
+			printf("\n");	
+			continue;
+		}
+
+		do {
+			printf("%d ", it->j);
+			it = it->right;
+		} while (it!= this->rows[i].first);
+		
+		printf(": first is %d, last is %d\n", this->rows[i].first->j, 
+			this->rows[i].last->j);
+
+		printf("\n");
+	}
+}
+
+//DLX functions
+
+void SparseMatrix::dlxRemoveCol(int y) 
+{
+	if (!this->currCols[y]) return;
+
+	this->currCols[y]=false;
+	this->currJ--;
+
+	Elem* it = this->columns[y].first;
+	Elem* prev = NULL, *next = NULL;
+	if (!it) return;
+
+	do {
+		prev = it->left;
+		next = it->right;
+
+		prev->right = next;
+		next->left = prev;
+		
+		if (rows[it->i].tam==1) {
+			rows[it->i].first = NULL;
+			rows[it->i].last = NULL;
+		}
+
+		if (it==rows[it->i].first) rows[it->i].first = next;
+		if (it==rows[it->i].last) rows[it->i].last = prev;
+
+		rows[it->i].tam--;
+
+		it=it->down;
+	} while (it!=this->columns[y].first);
+}
+
+void SparseMatrix::dlxRemoveRow(int x) 
+{
+	if (!this->currRows[x]) return;
+
+	this->currRows[x]=false;
+	this->currI--;
+
+	Elem* it = this->rows[x].first;
+	Elem* prev = NULL, *next = NULL;
+	if (!it) return;
+
+	do {
+		prev = it->up;
+		next = it->down;
+
+		prev->down = next;
+		next->up = prev;
+		
+		if (columns[it->j].tam==1) {
+			columns[it->j].first = NULL;
+			columns[it->j].last = NULL;
+		}
+
+		if (it==columns[it->j].first) columns[it->j].first = next;
+		if (it==columns[it->j].last) columns[it->j].last = prev;
+
+		columns[it->j].tam--;
+
+		it=it->right;
+	} while (it!=this->rows[x].first);
+}
+
+void SparseMatrix::dlxReaddCol(int y)
+{
+	if (this->currCols[y]) return;
+
+	this->currCols[y]=true;
+	this->currJ++;
+
+	Elem* it = this->columns[y].first;
+	Elem* prev = NULL, *next = NULL;
+	if (!it) return;
+
+	do {
+		prev = it->left;
+		next = it->right;
+
+		prev->right = it;
+		next->left = it;
+
+		if (rows[it->i].tam==0) {
+			rows[it->i].first = it;
+			rows[it->i].last = it;
+		}
+		else {
+			if (it->j < rows[it->i].first->j) rows[it->i].first = it;
+			if (it->j > rows[it->i].last->j) rows[it->i].last = it;
+		}
+
+		rows[it->i].tam++;
+
+		it=it->down;
+	} while (it!=this->columns[y].first);
+}
+
+void SparseMatrix::dlxReaddRow(int x)
+{
+	if (this->currRows[x]) return;
+
+	this->currRows[x]=true;
+	this->currI++;
+
+	Elem* it = this->rows[x].first;
+	Elem* prev = NULL, *next = NULL;
+	if (!it) return;
+
+	do {
+		prev = it->up;
+		next = it->down;
+
+		prev->down = it;
+		next->up = it;
+
+		if (columns[it->j].tam==0) {
+			columns[it->j].first = it;
+			columns[it->j].last = it;
+		}
+		else {
+			if (it->i < columns[it->j].first->i) columns[it->j].first = it;
+			if (it->i > columns[it->j].last->i) columns[it->j].last = it;
+		}
+
+		columns[it->j].tam++;
+
+		it=it->right;
+	} while (it!=this->rows[x].first);
 }

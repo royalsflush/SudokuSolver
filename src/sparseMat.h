@@ -4,7 +4,7 @@
 class Elem {
 	public:
 	int value;
-	int posX, posY;
+	int i, j;
 	Elem* neigh[4];
 
 	// neigh[0] - up
@@ -26,15 +26,21 @@ class List {
 
 class SparseMatrix {
 	List* columns;
-	List* lines;
+	List* rows;
 	int maxI, maxJ;
 	int currI, currJ;
-	bool* currLines, *currCols;
+	bool* currRows, *currCols;
 
 	public:
 	SparseMatrix(int maxTI, int maxTJ);
-	void insertInPos(int x, int y);
+	void insertInPos(int di, int dj);
+	void printAsList(bool byCols);
 	void print(bool byCols);
+	
+	void dlxRemoveCol(int y);
+	void dlxRemoveRow(int x);
+	void dlxReaddCol(int y);
+	void dlxReaddRow(int x);
 };
 
 #endif /* SPARSE_MAT_H */
