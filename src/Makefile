@@ -1,16 +1,18 @@
 CC = g++
 DBG = -g -D_DBG
-SRCS = sparseMat.cpp main.cpp
+SRCS = sparseMat.cpp main.cpp #SMmain.cpp
 CFLAGS = -ansi -pedantic -Wall -Wshadow
 OBJS = $(SRCS:.cpp=.o) 
 OUT= out
 
-.PHONY: mat
+.PHONY: mat xalgo
 
-all: mat
+all: xalgo
+
+xalgo: $(OBJS)
+	$(CC) $(CFLAGS) $(DBG) -o $(OUT) $^
 
 mat: $(OBJS)
-	echo "Linking $(OBJS)"
 	$(CC) $(CFLAGS) $(DBG) -o $(OUT) $^
 
 .cpp.o:

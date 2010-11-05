@@ -25,13 +25,14 @@ class List {
 };
 
 class SparseMatrix {
-	List* columns;
 	List* rows;
 	int maxI, maxJ;
-	int currI, currJ;
 	bool* currRows, *currCols;
 
 	public:
+	List* columns;
+	int currI, currJ;
+	
 	SparseMatrix(int maxTI, int maxTJ);
 	void insertInPos(int di, int dj);
 	void printAsList(bool byCols);
